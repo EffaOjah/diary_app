@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:3000/entries";
+const API_URL = "http://localhost:3000/api/entries";
 
 const form = document.getElementById("entryForm");
 const entriesContainer = document.getElementById("entries");
@@ -7,6 +7,7 @@ document.addEventListener("DOMContentLoaded", loadEntries);
 
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
+
   const title = document.getElementById("title").value;
   const content = document.getElementById("content").value;
 
@@ -18,6 +19,22 @@ form.addEventListener("submit", async (e) => {
     });
     if (!res.ok) throw new Error(`Server responded ${res.status}`);
     form.reset();
+    loadEntries();
+  } catch (err) {
+    console.error(err);
+  }
+});
+
+// Event delegation: one listener on the container handles clicks
+// on any delete button, even ones added after page load.
+entriesContainer.addEventListener("click", async (e) => {
+  if (!e.target.classList.contains("delete-btn")) return;
+
+  const id = e.target.dataset.id;
+
+  try {
+    const res = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+    if (!res.ok) throw new Error(`Server responded ${res.status}`);
     loadEntries();
   } catch (err) {
     console.error(err);
@@ -41,6 +58,7 @@ async function loadEntries() {
       const div = document.createElement("div");
       div.className = "entry-card";
       div.innerHTML = `
+        <button class="delete-btn" data-id="${entry.id}">Delete</button>
         <h3>${entry.title}</h3>
         <p>${entry.content}</p>
         <span class="date">${new Date(entry.created_at).toLocaleString()}</span>
